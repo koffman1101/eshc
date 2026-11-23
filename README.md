@@ -76,7 +76,8 @@ shc -r -f your_script.sh -o your_app
 ```
 
 > **Note on `-U` (Untraceable) Flag | 关于 `-U` 参数的说明**：  
-> On modern Linux distributions with Yama `kernel.yama.ptrace_scope = 1` (e.g., Ubuntu), vanilla `-U` child-to-parent `ptrace` attachment requires `root` privileges or it will terminate with `Operation not permitted`. In normal user environments, omit `-U` and rely on `eshc`'s built-in `PR_SET_DUMPABLE` protection.  
+> On modern Linux distributions with Yama `kernel.yama.ptrace_scope = 1` (e.g., Ubuntu), vanilla `-U` child-to-parent `ptrace` attachment requires `root` privileges or it will terminate with `Operation not permitted`. In normal user environments, omit `-U` and rely on `eshc`'s built-in `PR_SET_DUMPABLE` protection.
+
 > 在开启了 Yama `ptrace_scope = 1` 的现代 Linux 发行版（如 Ubuntu）中，原版 `-U` 参数的子进程反向 `ptrace` 父进程机制需要 `root` 权限才能运行，否则会触发 `Operation not permitted` 退出。普通用户环境下无需加 `-U`，直接依赖 `eshc` 默认内置的 `PR_SET_DUMPABLE` 防护即可。
 
 ### 2. Recommended `systemd` Service Hardening | 推荐服务加固配置
@@ -103,7 +104,9 @@ While the anonymous pipe mechanism works across standard `sh` and `bash`, full c
 虽然匿名管道机制本身兼容常规 `sh` 与 `bash`，但要完整发挥所有加固特性（尤其是通过 `BASH_ARGV0` 精准还原 `\$0` 进程/脚本名，以及高位文件描述符 `fd 199` 重定向），**目标运行环境建议使用 Bash 5.0 及以上版本**。在精简版 POSIX Shell（如 `dash`、BusyBox `ash` 或 Bash 4.x 及更早版本）下，脚本仍可正常执行，但 `\$0` 将显示为解释器路径而非原始二进制名，且极简 Shell 可能不支持超过 `9` 的文件描述符。
 
 ### 2. Caller Identity Verification | 父进程身份校验方式
-Scripts verifying whether they were launched by `systemd` or a specific parent service should traverse ancestor PIDs up to `PID 1` or inspect `/proc/\[/cgroup` rather than hardcoding fixed grandparent PID checks.  若业务脚本需要校验是否由 `systemd` 或特定守护进程拉起，建议向上追溯祖先进程链直至 `PID 1` 并结合 `/proc/\]/cgroup` 校验，而非写死固定层级的父/祖父进程判断。
+Scripts verifying whether they were launched by `systemd` or a specific parent service should traverse ancestor PIDs up to `PID 1` or inspect `/proc/\[/cgroup` rather than hardcoding fixed grandparent PID checks.  
+
+若业务脚本需要校验是否由 `systemd` 或特定守护进程拉起，建议向上追溯祖先进程链直至 `PID 1` 并结合 `/proc/\]/cgroup` 校验，而非写死固定层级的父/祖父进程判断。
 
 ### 3. OS Kernel Dependency | 操作系统限制
 `prctl(PR_SET_DUMPABLE, 0)` is Linux-specific; non-Linux Unix systems automatically skip this syscall while retaining anonymous pipe execution protection.
